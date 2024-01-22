@@ -50,7 +50,7 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send('server is runing very fast')
+    res.send('server is runing')
 })
 
 app.listen(port, () => {
