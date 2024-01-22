@@ -27,9 +27,14 @@ async function run() {
     await client.connect();
 
     const allBooksCollection = client.db('bookWarp').collection('allBooks');
+    const allBlogs = client.db('bookWarp').collection('allBlogs');
 
     app.get('/allBooks', async (req, res) => {
         const result = await allBooksCollection.find().toArray();
+        res.send(result);
+    })
+    app.get('/allBlogs', async (req, res) => {
+        const result = await allBlogs.find().toArray();
         res.send(result);
     })
 
