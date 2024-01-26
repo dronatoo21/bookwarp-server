@@ -27,6 +27,7 @@ async function run() {
 
     const allBooksCollection = client.db("bookWarp").collection("allBooks");
     const allBlogs = client.db("bookWarp").collection("allBlogs");
+    const bookmarkCollection = client.db("bookWarp").collection("bookmark");
 
     app.get("/allBooks", async (req, res) => {
       const result = await allBooksCollection.find().toArray();
@@ -36,6 +37,22 @@ async function run() {
       const result = await allBlogs.find().toArray();
       res.send(result);
     });
+
+    app.post("/bookmark", async(req, res)=>{
+      const bookmark=req.body;
+      const result =await bookmarkCollection.insertOne(bookmark);
+      res.send(result);
+    })
+  
+    app.get("/bookmark", async(req, res)=>{
+      let query ={};
+      if(req.query?.email){
+        query={email : req.query.email};
+      }
+      const cursor =bookmarkCollection.find(query);
+      const result=await cursor.toArray();
+      res.send(result);
+    })
 
     app.get("/search", async (req, res) => {
       const text = req.query.text;
