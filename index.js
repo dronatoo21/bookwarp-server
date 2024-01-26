@@ -8,7 +8,7 @@ const port = process.env.PORT || 4000;
 app.use(cors());
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.nqakwmz.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -29,14 +29,34 @@ async function run() {
     const allBlogs = client.db("bookWarp").collection("allBlogs");
     const bookmarkCollection = client.db("bookWarp").collection("bookmark");
 
+    // 
+    // All Books---------------------
+    // 
+
     app.get("/allBooks", async (req, res) => {
       const result = await allBooksCollection.find().toArray();
       res.send(result);
     });
+
+    app.get('/allBooks/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await allBooksCollection.findOne(query)
+      res.send(result);
+    })
+
+    // 
+    //Blogs--------------------------- 
+    //  
+
     app.get("/allBlogs", async (req, res) => {
       const result = await allBlogs.find().toArray();
       res.send(result);
     });
+
+    // 
+    // Bookmark -----------------------------------
+    // 
 
     app.post("/bookmark", async(req, res)=>{
       const bookmark=req.body;
@@ -53,6 +73,10 @@ async function run() {
       const result=await cursor.toArray();
       res.send(result);
     })
+
+    // 
+    // search------------------------------
+    // 
 
     app.get("/search", async (req, res) => {
       const text = req.query.text;
