@@ -28,6 +28,7 @@ async function run() {
     const allBooksCollection = client.db("bookWarp").collection("allBooks");
     const allBlogs = client.db("bookWarp").collection("allBlogs");
     const bookmarkCollection = client.db("bookWarp").collection("bookmark");
+    const userCollection = client.db("bookWarp").collection("users");
 
     // 
     // All Books---------------------
@@ -86,6 +87,34 @@ async function run() {
       console.log(result);
       res.send(result);
     });
+
+
+    // 
+    // All Logged in Users Data
+    // 
+
+    app.post("/users", async (req, res) => {
+      const newUser = req.body;
+
+      const query = { email: newUser.email };
+      const existingUser = await userCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: "user already exists", insertedId: null });
+      }
+      const result = await userCollection.insertOne(newUser);
+      console.log("Got new user", req.body);
+      res.send(result);
+    });
+
+    app.get("/users", async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    }
+    );
+    
+
+
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
