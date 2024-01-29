@@ -30,55 +30,59 @@ async function run() {
     const bookmarkCollection = client.db("bookWarp").collection("bookmark");
     const userCollection = client.db("bookWarp").collection("users");
 
-    // 
+    //
     // All Books---------------------
-    // 
+    //
 
     app.get("/allBooks", async (req, res) => {
       const result = await allBooksCollection.find().toArray();
       res.send(result);
     });
 
- 
-    app.get('/allBooks/:id', async (req, res) => {
+    app.get("/allBooks/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)}
-      const result = await allBooksCollection.findOne(query)
+      const query = { _id: new ObjectId(id) };
+      const result = await allBooksCollection.findOne(query);
       res.send(result);
-    })
+    });
 
-    // 
-    //Blogs--------------------------- 
-    //  
+    app.post("/allBooks", async (req, res) => {
+      const books = req.body;
+      const result = await allBooksCollection.insertOne(books);
+      res.send(books);
+    });
+    //
+    //Blogs---------------------------
+    //
 
     app.get("/allBlogs", async (req, res) => {
       const result = await allBlogs.find().toArray();
       res.send(result);
     });
 
-    // 
+    //
     // Bookmark -----------------------------------
-    // 
+    //
 
-    app.post("/bookmark", async(req, res)=>{
-      const bookmark=req.body;
-      const result =await bookmarkCollection.insertOne(bookmark);
+    app.post("/bookmark", async (req, res) => {
+      const bookmark = req.body;
+      const result = await bookmarkCollection.insertOne(bookmark);
       res.send(result);
-    })
-  
-    app.get("/bookmark", async(req, res)=>{
-      let query ={};
-      if(req.query?.email){
-        query={email : req.query.email};
+    });
+
+    app.get("/bookmark", async (req, res) => {
+      let query = {};
+      if (req.query?.email) {
+        query = { email: req.query.email };
       }
-      const cursor =bookmarkCollection.find(query);
-      const result=await cursor.toArray();
+      const cursor = bookmarkCollection.find(query);
+      const result = await cursor.toArray();
       res.send(result);
-    })
+    });
 
-    // 
+    //
     // search------------------------------
-    // 
+    //
 
     app.get("/search", async (req, res) => {
       const text = req.query.text;
@@ -88,10 +92,9 @@ async function run() {
       res.send(result);
     });
 
-
-    // 
+    //
     // All Logged in Users Data
-    // 
+    //
 
     app.post("/users", async (req, res) => {
       const newUser = req.body;
@@ -109,12 +112,7 @@ async function run() {
     app.get("/users", async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
-    }
-    );
-    
-
-
-
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
