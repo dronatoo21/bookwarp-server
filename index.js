@@ -130,8 +130,8 @@ async function run() {
           avatar: data.avatar,
           bloodGroup: data.bloodGroup,
           address: {
-            division: data.division,
-            district: data.district,
+            division: data.address.division,
+            district: data.address.district,
           },
         },
       };
