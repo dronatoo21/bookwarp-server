@@ -30,55 +30,54 @@ async function run() {
     const bookmarkCollection = client.db("bookWarp").collection("bookmark");
     const userCollection = client.db("bookWarp").collection("users");
 
-    // 
+    //
     // All Books---------------------
-    // 
+    //
 
     app.get("/allBooks", async (req, res) => {
       const result = await allBooksCollection.find().toArray();
       res.send(result);
     });
 
- 
-    app.get('/allBooks/:id', async (req, res) => {
+    app.get("/allBooks/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)}
-      const result = await allBooksCollection.findOne(query)
+      const query = { _id: new ObjectId(id) };
+      const result = await allBooksCollection.findOne(query);
       res.send(result);
-    })
+    });
 
-    // 
-    //Blogs--------------------------- 
-    //  
+    //
+    //Blogs---------------------------
+    //
 
     app.get("/allBlogs", async (req, res) => {
       const result = await allBlogs.find().toArray();
       res.send(result);
     });
 
-    // 
+    //
     // Bookmark -----------------------------------
-    // 
+    //
 
-    app.post("/bookmark", async(req, res)=>{
-      const bookmark=req.body;
-      const result =await bookmarkCollection.insertOne(bookmark);
+    app.post("/bookmark", async (req, res) => {
+      const bookmark = req.body;
+      const result = await bookmarkCollection.insertOne(bookmark);
       res.send(result);
-    })
-  
-    app.get("/bookmark", async(req, res)=>{
-      let query ={};
-      if(req.query?.email){
-        query={email : req.query.email};
+    });
+
+    app.get("/bookmark", async (req, res) => {
+      let query = {};
+      if (req.query?.email) {
+        query = { email: req.query.email };
       }
-      const cursor =bookmarkCollection.find(query);
-      const result=await cursor.toArray();
+      const cursor = bookmarkCollection.find(query);
+      const result = await cursor.toArray();
       res.send(result);
-    })
+    });
 
-    // 
+    //
     // search------------------------------
-    // 
+    //
 
     app.get("/search", async (req, res) => {
       const text = req.query.text;
@@ -88,10 +87,9 @@ async function run() {
       res.send(result);
     });
 
-
-    // 
+    //
     // All Logged in Users Data
-    // 
+    //
 
     app.post("/users", async (req, res) => {
       const newUser = req.body;
@@ -106,15 +104,69 @@ async function run() {
       res.send(result);
     });
 
+    // _______________________________________________________
+    // get users data
+    // _______________________________________________________
+
     app.get("/users", async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
-    }
-    );
-    
+    });
 
+    // _______________________________________________________
+    // update users data by email
 
+    app.put("/users/update/:id", async (req, res) => {
+      const email = req.params.id;
+      const query = { email: email };
+      console.log(query);
+      const data = req.body;
+      console.log(data);
 
+      const options = { upsert: true };
+      const updatedUSer = {
+        $set: {
+          name: data.name,
+          avatar: data.avatar,
+          bloodGroup: data.bloodGroup,
+          address: {
+            division: data.division,
+            district: data.district,
+          },
+        },
+      };
+      const result = await userCollection.updateOne(
+        query,
+        updatedUSer,
+        options
+      );
+      res.send(result);
+    });
+
+    // _______________________________________________________
+    // delete users data by email
+    // _______________________________________________________
+
+    app.delete("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await userCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    //
+    //  Get Current Logged in User Data
+    //
+
+    app.get("/users/:id", async (req, res) => {
+      const email = req.params.id;
+
+      const query = { email: email };
+
+      console.log(query);
+      const result = await userCollection.findOne(query);
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
