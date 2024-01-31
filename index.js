@@ -46,11 +46,6 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/allBooks", async (req, res) => {
-      const books = req.body;
-      const result = await allBooksCollection.insertOne(books);
-      res.send(books);
-    });
     //
     //Blogs---------------------------
     //
@@ -79,13 +74,6 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     });
-
-    app.delete("/bookmark/:id", async(req, res)=>{
-      const id=req.params.id;
-      const query ={_id: new ObjectId(id)};
-      const result=await bookmarkCollection.deleteOne(query);
-      res.send(result);
-    })
 
     //
     // search------------------------------
@@ -116,8 +104,67 @@ async function run() {
       res.send(result);
     });
 
+    // _______________________________________________________
+    // get users data
+    // _______________________________________________________
+
     app.get("/users", async (req, res) => {
       const result = await userCollection.find().toArray();
+      res.send(result);
+    });
+
+    // _______________________________________________________
+    // update users data by email
+
+    app.put("/users/update/:id", async (req, res) => {
+      const email = req.params.id;
+      const query = { email: email };
+      console.log(query);
+      const data = req.body;
+      console.log(data);
+
+      const options = { upsert: true };
+      const updatedUSer = {
+        $set: {
+          name: data.name,
+          avatar: data.avatar,
+          bloodGroup: data.bloodGroup,
+          address: {
+            division: data.division,
+            district: data.district,
+          },
+        },
+      };
+      const result = await userCollection.updateOne(
+        query,
+        updatedUSer,
+        options
+      );
+      res.send(result);
+    });
+
+    // _______________________________________________________
+    // delete users data by email
+    // _______________________________________________________
+
+    app.delete("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await userCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    //
+    //  Get Current Logged in User Data
+    //
+
+    app.get("/users/:id", async (req, res) => {
+      const email = req.params.id;
+
+      const query = { email: email };
+
+      console.log(query);
+      const result = await userCollection.findOne(query);
       res.send(result);
     });
 
