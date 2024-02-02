@@ -58,6 +58,12 @@ async function run() {
       res.send(result);
     });
 
+    app.post("/allBooks", async (req, res) => {
+      const books = req.body;
+      const result = await allBooksCollection.insertOne(books);
+      res.send(books);
+    });
+
     //
     //Blogs---------------------------
     //
@@ -131,6 +137,14 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id)
+      const query = { email: id };
+      const result = await userCollection.findOne(query);
+      res.send(result);
+    })
+
     // _______________________________________________________
     // update users data by email
 
@@ -145,7 +159,7 @@ async function run() {
       const updatedUSer = {
         $set: {
           name: data.name,
-          avatar: data.avatar,
+          image: data.avatar,
           bloodGroup: data.bloodGroup,
           address: {
             division: data.address.division,
