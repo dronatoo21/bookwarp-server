@@ -159,7 +159,7 @@ async function run() {
       const updatedUSer = {
         $set: {
           name: data.name,
-          image: data.avatar,
+          image: data.image,
           bloodGroup: data.bloodGroup,
           address: {
             division: data.address.division,
