@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 require("dotenv").config();
+const SSLCommerzPayment = require("sslcommerz-lts");
 const port = process.env.PORT || 4000;
 
 // middleware
@@ -20,6 +21,16 @@ const client = new MongoClient(uri, {
   },
 });
 
+// _______________________________________________________\
+
+// SSLCOMMERZ INITIALIZATION USER ID AND PASSWORD
+
+const store_id = process.env.SSLCOMERZ_MERCHANT_ID;
+const store_passwd = process.env.SSLCOMERZ_PASS;
+const is_live = false; //true for live, false for sandbox
+
+// _______________________________________________________
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -29,6 +40,7 @@ async function run() {
     const allBlogs = client.db("bookWarp").collection("allBlogs");
     const bookmarkCollection = client.db("bookWarp").collection("bookmark");
     const userCollection = client.db("bookWarp").collection("users");
+    const orderCollection = client.db("bookWarp").collection("orders");
 
     //
     // All Books---------------------
@@ -44,6 +56,12 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const result = await allBooksCollection.findOne(query);
       res.send(result);
+    });
+
+    app.post("/allBooks", async (req, res) => {
+      const books = req.body;
+      const result = await allBooksCollection.insertOne(books);
+      res.send(books);
     });
 
     app.delete("/allBooks/:id", async (req, res) => {
@@ -82,6 +100,12 @@ async function run() {
       res.send(result);
     });
 
+    app.delete("/bookmark/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await bookmarkCollection.deleteOne(query);
+      res.send(result);
+    });
     //
     // search------------------------------
     //
@@ -120,6 +144,14 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const query = { email: id };
+      const result = await userCollection.findOne(query);
+      res.send(result);
+    });
+
     // _______________________________________________________
     // update users data by email
 
@@ -134,7 +166,7 @@ async function run() {
       const updatedUSer = {
         $set: {
           name: data.name,
-          avatar: data.avatar,
+          image: data.image,
           bloodGroup: data.bloodGroup,
           address: {
             division: data.address.division,
@@ -175,6 +207,78 @@ async function run() {
       res.send(result);
     });
 
+    // _______________________________________________________
+    // Payment from SSLCommerz
+    // _______________________________________________________
+    const tranId = new ObjectId().toString();
+    app.post("/order", async (req, res) => {
+      const product = await allBooksCollection.findOne({
+        _id: new ObjectId(req.body.bookId),
+      });
+      const allData = req.body;
+
+      const data = {
+        total_amount: product.price,
+        currency: "USD",
+        tran_id: tranId, // use unique tran_id for each api call
+        success_url: `https://bookwarp.vercel.app/payment/success/:${tranId}`,
+        fail_url: "https://bookwarp.vercel.app/",
+        cancel_url: "https://bookwarp.vercel.app/",
+        ipn_url: "https://bookwarp.vercel.app/",
+        shipping_method: "Courier",
+        product_name: "Computer.",
+        product_category: "Electronic",
+        product_profile: "general",
+        cus_name: allData.customerName,
+        cus_email: allData.customerEmail,
+        cus_add1: allData.address,
+        cus_add2: "Dhaka",
+        cus_city: "Dhaka",
+        cus_state: "Dhaka",
+        cus_postcode: "1000",
+        cus_country: "Bangladesh",
+        cus_phone: allData.contact,
+        cus_fax: "01711111111",
+        ship_name: "Customer Name",
+        ship_add1: "Dhaka",
+        ship_add2: "Dhaka",
+        ship_city: "Dhaka",
+        ship_state: "Dhaka",
+        ship_postcode: 1000,
+        ship_country: "Bangladesh",
+      };
+
+      console.log(data);
+
+      const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
+      sslcz.init(data).then((apiResponse) => {
+        // Redirect the user to payment gateway
+        let GatewayPageURL = apiResponse.GatewayPageURL;
+        res.send({ url: GatewayPageURL });
+
+        const finalOrder = {
+          product,
+          paidStatus: false,
+          transactionId: tranId,
+        };
+        const result = orderCollection.insertOne(finalOrder);
+
+        console.log("Redirecting to: ", GatewayPageURL);
+      });
+
+      app.post("/payment/success/:tranId", (req, res) => {
+        console.log(req.params.tranId);
+        const query = { transactionId: req.params.tranId };
+        const updatedData = { $set: { paidStatus: true } };
+        const result = orderCollection.updateOne(query, updatedData);
+        if (result.modifiedCount > 0) {
+          res.redirect(
+            `https://bookwarp.vercel.app/payment/success/:${req.params.tranId}`
+          );
+        }
+      });
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
@@ -188,7 +292,7 @@ async function run() {
 run().catch(console.dir);
 
 app.get("/", (req, res) => {
-  res.send("server is runing");
+  res.send("server is running.........");
 });
 
 app.listen(port, () => {
