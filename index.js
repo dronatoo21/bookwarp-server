@@ -64,6 +64,13 @@ async function run() {
       res.send(books);
     });
 
+    app.delete("/allBooks/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await allBooksCollection.deleteOne(query);
+      res.send(result);
+    });
+
     //
     //Blogs---------------------------
     //
@@ -139,11 +146,11 @@ async function run() {
 
     app.get("/users/:id", async (req, res) => {
       const id = req.params.id;
-      console.log(id)
+      console.log(id);
       const query = { email: id };
       const result = await userCollection.findOne(query);
       res.send(result);
-    })
+    });
 
     // _______________________________________________________
     // update users data by email
@@ -165,6 +172,7 @@ async function run() {
             division: data.address.division,
             district: data.address.district,
           },
+          phone: data.phone,
         },
       };
       const result = await userCollection.updateOne(
@@ -214,7 +222,7 @@ async function run() {
         total_amount: product.price,
         currency: "USD",
         tran_id: tranId, // use unique tran_id for each api call
-        success_url: `https://bookwarp.vercel.app/payment/success/:${tranId}`,
+        success_url: `https://bookwarp.vercel.app/dashboard/payment/success/${tranId}`,
         fail_url: "https://bookwarp.vercel.app/",
         cancel_url: "https://bookwarp.vercel.app/",
         ipn_url: "https://bookwarp.vercel.app/",
@@ -264,8 +272,10 @@ async function run() {
         const query = { transactionId: req.params.tranId };
         const updatedData = { $set: { paidStatus: true } };
         const result = orderCollection.updateOne(query, updatedData);
-        if(result.modifiedCount > 0){
-          res.redirect(`https://bookwarp.vercel.app/payment/success/:${req.params.tranId}`);
+        if (result.modifiedCount > 0) {
+          res.redirect(
+            `https://bookwarp.vercel.app/dashboard/payment/success/${req.params.tranId}`
+          );
         }
       });
     });
