@@ -172,6 +172,7 @@ async function run() {
             division: data.address.division,
             district: data.address.district,
           },
+          phone: data.phone,
         },
       };
       const result = await userCollection.updateOne(
@@ -221,7 +222,7 @@ async function run() {
         total_amount: product.price,
         currency: "USD",
         tran_id: tranId, // use unique tran_id for each api call
-        success_url: `https://bookwarp.vercel.app/payment/success/:${tranId}`,
+        success_url: `https://bookwarp.vercel.app/dashboard/payment/success/${tranId}`,
         fail_url: "https://bookwarp.vercel.app/",
         cancel_url: "https://bookwarp.vercel.app/",
         ipn_url: "https://bookwarp.vercel.app/",
@@ -273,7 +274,7 @@ async function run() {
         const result = orderCollection.updateOne(query, updatedData);
         if (result.modifiedCount > 0) {
           res.redirect(
-            `https://bookwarp.vercel.app/payment/success/:${req.params.tranId}`
+            `https://bookwarp.vercel.app/dashboard/payment/success/${req.params.tranId}`
           );
         }
       });
