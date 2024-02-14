@@ -41,7 +41,21 @@ async function run() {
     const bookmarkCollection = client.db("bookWarp").collection("bookmark");
     const userCollection = client.db("bookWarp").collection("users");
     const orderCollection = client.db("bookWarp").collection("orders");
+    const userReviews = client.db("bookWarp").collection("review");
 
+    //
+    // User Review---------------------
+    app.post("/review", async (req, res) => {
+      const review = req.body;
+      const result = await userReviews.insertOne(review);
+      res.send(result);
+    });
+
+    app.get("/review", async (req, res) => {
+      const result = await userReviews.find().toArray();
+      res.send(result);
+    });
+    //
     //
     // All Books---------------------
     //
